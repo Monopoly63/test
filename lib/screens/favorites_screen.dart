@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/app_data.dart';
 import '../services/storage_service.dart';
 import '../utils/app_theme.dart';
+import '../utils/icon_mapper.dart';
 
 class FavoritesScreen extends StatefulWidget {
   final Map<String, bool> favs;
@@ -40,6 +42,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     widget.onFavChanged();
   }
 
+  Future<void> _copyText(String text, String ref) async {
+    await Clipboard.setData(ClipboardData(text: ref.isEmpty ? text : '$text\n\n$ref'));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('تم حفظ نص الذكر في الحافظة', textDirection: TextDirection.rtl)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final favItems = <Map<String, dynamic>>[];
@@ -57,20 +67,20 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     }
 
     if (favItems.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('⭐', style: TextStyle(fontSize: 48)),
-            SizedBox(height: 16),
-            Text(
+            Icon(Icons.star_border, size: 58, color: Colors.grey[500]),
+            const SizedBox(height: 16),
+            const Text(
               'لم تضف أي ذكر للمفضلة بعد',
               style: TextStyle(fontSize: 16, color: Colors.grey),
               textDirection: TextDirection.rtl,
             ),
-            SizedBox(height: 8),
-            Text(
-              'اضغط ☆ على أي ذكر لإضافته',
+            const SizedBox(height: 8),
+            const Text(
+              'اضغط على أيقونة النجمة بجانب الذكر لإضافته',
               style: TextStyle(fontSize: 14, color: Colors.grey),
               textDirection: TextDirection.rtl,
             ),
@@ -99,17 +109,29 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      '${cat.icon} ${cat.category}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
+                    Icon(iconForCategory(cat), size: 18, color: AppTheme.primary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        cat.category,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.62),
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () => _removeFav(key),
-                      child: const Text('⭐', style: TextStyle(fontSize: 22)),
+                    IconButton(
+                      tooltip: 'حفظ نص الذكر',
+                      onPressed: () => _copyText(item.text, item.ref),
+                      icon: const Icon(Icons.content_copy_outlined),
+                      color: AppTheme.primary,
+                    ),
+                    IconButton(
+                      tooltip: 'إزالة من المفضلة',
+                      onPressed: () => _removeFav(key),
+                      icon: const Icon(Icons.star),
+                      color: AppTheme.gold,
                     ),
                   ],
                 ),
@@ -118,21 +140,33 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   item.text,
                   style: const TextStyle(
                     fontSize: 18,
-                    fontFamily: 'Amiri',
                     height: 1.9,
                   ),
                   textDirection: TextDirection.rtl,
                 ),
                 if (item.ref.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  Text(
-                    '📚 ${item.ref}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[500],
-                      fontStyle: FontStyle.italic,
-                    ),
-                    textDirection: TextDirection.rtl,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.menu_book_outlined,
+                        size: 15,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          item.ref,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45),
+                            fontStyle: FontStyle.italic,
+                          ),
+                          textDirection: TextDirection.rtl,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ],

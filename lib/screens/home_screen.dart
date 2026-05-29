@@ -8,15 +8,25 @@ import '../widgets/filter_chips.dart';
 import '../widgets/stats_bar.dart';
 import 'dhikr_screen.dart';
 import 'favorites_screen.dart';
+import 'notifications_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isDark;
+  final double fontScale;
+  final String fontFamily;
   final VoidCallback onToggleTheme;
+  final ValueChanged<double> onFontScaleChanged;
+  final ValueChanged<String> onFontFamilyChanged;
 
   const HomeScreen({
     super.key,
     required this.isDark,
+    required this.fontScale,
+    required this.fontFamily,
     required this.onToggleTheme,
+    required this.onFontScaleChanged,
+    required this.onFontFamilyChanged,
   });
 
   @override
@@ -42,6 +52,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _favs = StorageService.getFavs();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   void _refreshState() {
     setState(() {
       _state = StorageService.getState();
@@ -61,10 +77,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toLowerCase();
-      cats = cats.where((c) =>
-        c.category.contains(q) ||
-        c.items.any((i) => i.text.contains(q))
-      ).toList();
+      cats = cats
+          .where((c) => c.category.contains(q) || c.items.any((i) => i.text.contains(q)))
+          .toList();
     }
     return cats;
   }
@@ -128,11 +143,33 @@ class _HomeScreenState extends State<HomeScreen> {
     ).then((_) => _refreshState());
   }
 
+  void _openSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SettingsScreen(
+          isDark: widget.isDark,
+          fontScale: widget.fontScale,
+          fontFamily: widget.fontFamily,
+          onToggleTheme: widget.onToggleTheme,
+          onFontScaleChanged: widget.onFontScaleChanged,
+          onFontFamilyChanged: widget.onFontFamilyChanged,
+        ),
+      ),
+    );
+  }
+
+  void _openNotifications() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+    );
+  }
+
   Widget _buildHomeBody() {
     final cats = _filteredCategories;
     return Column(
       children: [
-        // Search Bar
         Container(
           color: Theme.of(context).scaffoldBackgroundColor,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -140,8 +177,9 @@ class _HomeScreenState extends State<HomeScreen> {
             controller: _searchController,
             textDirection: TextDirection.rtl,
             decoration: InputDecoration(
-              hintText: '🔍 ابحث عن قسم أو ذكر...',
+              hintText: 'ابحث عن قسم أو ذكر...',
               hintTextDirection: TextDirection.rtl,
+              prefixIcon: const Icon(Icons.search),
               filled: true,
               fillColor: Theme.of(context).cardColor,
               border: OutlineInputBorder(
@@ -165,14 +203,12 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
         ),
-        // Stats Bar
         StatsBar(
           total: _totalDhikr,
           done: _doneDhikr,
           cats: appData.length,
           favs: _favCount,
         ),
-        // Filter Chips
         FilterChips(
           groups: _groups,
           activeGroup: _activeGroup,
@@ -182,7 +218,6 @@ class _HomeScreenState extends State<HomeScreen> {
             });
           },
         ),
-        // Bismillah
         const Padding(
           padding: EdgeInsets.only(top: 16, bottom: 4),
           child: Text(
@@ -190,18 +225,15 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(
               fontSize: 22,
               color: AppTheme.gold,
-              fontFamily: 'Amiri',
+              fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
           ),
         ),
-        const Text(
-          '❧ ✦ ❧',
-          style: TextStyle(color: AppTheme.gold, fontSize: 16),
-          textAlign: TextAlign.center,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 72, vertical: 6),
+          child: Divider(color: AppTheme.gold.withOpacity(0.65), thickness: 1),
         ),
-        const SizedBox(height: 10),
-        // Grid
         Expanded(
           child: cats.isEmpty
               ? const Center(
@@ -224,9 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     final doneItems = cat.items.asMap().entries
                         .where((e) => _getRemaining(cat.category, e.key, e.value.count) == 0)
                         .length;
-                    final progress = cat.items.isNotEmpty
-                        ? doneItems / cat.items.length
-                        : 0.0;
+                    final progress = cat.items.isNotEmpty ? doneItems / cat.items.length : 0.0;
                     final allDone = doneItems == cat.items.length;
 
                     return CategoryCard(
@@ -248,12 +278,12 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🌿 ', style: TextStyle(fontSize: 20)),
+          children: const [
+            Icon(Icons.auto_awesome_outlined, color: AppTheme.goldLight, size: 20),
+            SizedBox(width: 8),
             Text(
-              'حصن المسلم',
+              'تذكر',
               style: TextStyle(
-                fontFamily: 'Amiri',
                 fontWeight: FontWeight.bold,
                 color: AppTheme.goldLight,
                 fontSize: 20,
@@ -261,11 +291,21 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(widget.isDark ? Icons.wb_sunny : Icons.nightlight_round),
+            tooltip: 'الإشعارات',
+            icon: const Icon(Icons.notifications_active_outlined),
+            onPressed: _openNotifications,
+          ),
+          IconButton(
+            tooltip: widget.isDark ? 'الوضع النهاري' : 'الوضع الليلي',
+            icon: Icon(widget.isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round),
             onPressed: widget.onToggleTheme,
+          ),
+          IconButton(
+            tooltip: 'الإعدادات',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: _openSettings,
           ),
         ],
       ),
@@ -290,11 +330,13 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(
-            icon: Text('🏠', style: TextStyle(fontSize: 22)),
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
             label: 'الرئيسية',
           ),
           BottomNavigationBarItem(
-            icon: Text('⭐', style: TextStyle(fontSize: 22)),
+            icon: Icon(Icons.star_border),
+            activeIcon: Icon(Icons.star),
             label: 'المفضلة',
           ),
           BottomNavigationBarItem(

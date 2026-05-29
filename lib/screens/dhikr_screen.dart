@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/dhikr_model.dart';
 import '../services/storage_service.dart';
-import '../utils/app_theme.dart';
+import '../utils/icon_mapper.dart';
 import '../widgets/dhikr_card.dart';
 
 class DhikrScreen extends StatefulWidget {
@@ -54,7 +55,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
     if (rem == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('أحسنت! تم الانتهاء ✓', textDirection: TextDirection.rtl),
+          content: Text('أحسنت! تم الانتهاء', textDirection: TextDirection.rtl),
           duration: Duration(seconds: 1),
         ),
       );
@@ -68,6 +69,19 @@ class _DhikrScreenState extends State<DhikrScreen> {
     });
     StorageService.saveFavs(_favs);
     widget.onStateChanged();
+  }
+
+  Future<void> _copyDhikr(int idx) async {
+    final item = widget.category.items[idx];
+    final text = item.ref.isEmpty ? item.text : '${item.text}\n\n${item.ref}';
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('تم حفظ نص الذكر في الحافظة', textDirection: TextDirection.rtl),
+        duration: Duration(seconds: 1),
+      ),
+    );
   }
 
   void _resetCategory() {
@@ -90,9 +104,19 @@ class _DhikrScreenState extends State<DhikrScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          '${widget.category.icon} ${widget.category.category}',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(iconForCategory(widget.category), size: 20),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                widget.category.category,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton.icon(
@@ -109,9 +133,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
           final item = widget.category.items[idx];
           final remaining = _getRemaining(idx);
           final isDone = remaining == 0;
-          final progress = item.count > 0
-              ? (item.count - remaining) / item.count
-              : 1.0;
+          final progress = item.count > 0 ? (item.count - remaining) / item.count : 1.0;
           final isFav = _favs[_getKey(idx)] ?? false;
 
           return DhikrCard(
@@ -123,6 +145,7 @@ class _DhikrScreenState extends State<DhikrScreen> {
             isFav: isFav,
             onCount: () => _decrement(idx),
             onFav: () => _toggleFav(idx),
+            onCopy: () => _copyDhikr(idx),
           );
         },
       ),

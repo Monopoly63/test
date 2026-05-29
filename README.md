@@ -1,25 +1,48 @@
-# حصن المسلم - تطبيق فلاتر
+# تذكر - تطبيق أذكار وأدعية
 
-تطبيق حصن المسلم للأذكار والأدعية - مبني بـ Flutter
+تطبيق **تذكر** للأذكار والأدعية، مبني بـ Flutter ويدعم العربية بالكامل RTL.
 
 ## المميزات
-- 33 قسم من الأذكار والأدعية
-- عداد لكل ذكر مع تتبع التقدم
-- نظام المفضلة
-- الوضع الليلي / النهاري
-- البحث في الأذكار
-- فلترة حسب المجموعة
-- إحصائيات الإنجاز
-- حفظ الحالة محلياً
+- أقسام الأذكار والأدعية مع عداد وتتبع تقدم لكل ذكر.
+- نظام المفضلة.
+- زر حفظ/نسخ نص الذكر بجانب زر المفضلة.
+- الوضع الليلي / النهاري.
+- البحث والفلترة حسب المجموعة.
+- إحصائيات الإنجاز.
+- تغيير حجم الخط داخل التطبيق.
+- تغيير نوع الخط من الإعدادات.
+- إشعارات وتنبيهات محلية:
+  - إرسال إشعار ذكر عام فورًا.
+  - تحديد وقت يومي لأذكار الصباح.
+  - تحديد وقت يومي لأذكار المساء.
+  - منبه يومي للاستيقاظ لصلاة الفجر.
+- صفحة تواصل معنا.
+- خيار تقييم التطبيق.
+- خيار مشاركة التطبيق.
+- واجهة بأيقونات Material أبسط وأكثر احترافية.
+- حفظ الحالة والإعدادات محليًا.
+
+## صورة الإشعارات
+تمت إضافة الصورة `1.jpg` كـ asset، ويستخدمها التطبيق داخل الإشعارات كصورة كبيرة/أيقونة كبيرة، مع اسم التطبيق **تذكر**.
+
+## صوت الأذان لمنبه الفجر
+كود منبه الفجر مجهز لاستخدام صوت مخصص باسم `adhan`.
+لجعل صوت الأذان يعمل فعليًا على Android، أضف ملف الأذان هنا:
+
+```text
+android/app/src/main/res/raw/adhan.mp3
+```
+
+ثم ابنِ التطبيق من جديد.
 
 ## متطلبات البناء
-- Flutter SDK >= 3.0.0
-- Android SDK
-- Java JDK 11+
+- Flutter SDK حديث متوافق مع الحزم المستخدمة.
+- Android SDK مع compileSdk 34.
+- Java JDK 11+.
 
 ## خطوات البناء
 
-### 1. إنشاء مشروع فلاتر جديد
+### 1. إنشاء مشروع فلاتر جديد عند الحاجة
 ```bash
 flutter create hisn_almuslim --org com.hisnalmuslim
 ```
@@ -31,6 +54,8 @@ flutter create hisn_almuslim --org com.hisnalmuslim
 - `analysis_options.yaml` → استبدل الملف
 - `android/app/build.gradle` → استبدل الملف
 - `android/app/src/main/AndroidManifest.xml` → استبدل الملف
+- `android/app/src/main/res/raw/` → مجلد صوت الأذان عند توفره
+- `1.jpg` → صورة الإشعارات
 
 ### 3. تثبيت الحزم
 ```bash
@@ -44,33 +69,38 @@ flutter build apk --release
 ```
 
 ### 5. مسار ملف APK
-```
+```text
 build/app/outputs/flutter-apk/app-release.apk
 ```
 
 ## هيكل المشروع
-```
+```text
 lib/
-├── main.dart                    # نقطة البداية
+├── main.dart
 ├── models/
-│   ├── dhikr_model.dart        # نماذج البيانات
-│   └── app_data.dart           # بيانات الأذكار كاملة
+│   ├── dhikr_model.dart
+│   └── app_data.dart
 ├── screens/
-│   ├── home_screen.dart        # الشاشة الرئيسية
-│   ├── dhikr_screen.dart       # شاشة الأذكار
-│   └── favorites_screen.dart   # شاشة المفضلة
+│   ├── home_screen.dart
+│   ├── dhikr_screen.dart
+│   ├── favorites_screen.dart
+│   ├── settings_screen.dart
+│   ├── notifications_screen.dart
+│   └── contact_screen.dart
 ├── widgets/
-│   ├── category_card.dart      # بطاقة القسم
-│   ├── dhikr_card.dart         # بطاقة الذكر
-│   ├── filter_chips.dart       # أزرار الفلترة
-│   └── stats_bar.dart          # شريط الإحصائيات
+│   ├── category_card.dart
+│   ├── dhikr_card.dart
+│   ├── filter_chips.dart
+│   └── stats_bar.dart
 ├── services/
-│   └── storage_service.dart    # خدمة التخزين المحلي
+│   ├── storage_service.dart
+│   └── notification_service.dart
 └── utils/
-    └── app_theme.dart          # ثيم التطبيق
+    ├── app_theme.dart
+    └── icon_mapper.dart
 ```
 
 ## ملاحظات
-- التطبيق يعمل بدون إنترنت (offline)
-- البيانات محفوظة محلياً على الجهاز
-- يدعم اللغة العربية بالكامل (RTL)
+- بيانات الأذكار محفوظة داخل التطبيق.
+- الحالة، المفضلة، إعدادات الخط، وأوقات التنبيهات تحفظ محليًا على الجهاز.
+- إذا كان التطبيق سيُنشر على المتجر، حدّث رابط المشاركة وبيانات التواصل حسب بياناتك الرسمية.
