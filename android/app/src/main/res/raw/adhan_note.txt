@@ -1,2 +1,0 @@
-Place the real adhan sound here as: adhan.mp3
-The app schedules the Fajr alarm channel using RawResourceAndroidNotificationSound('adhan').
