@@ -4,6 +4,24 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0'
+}
+
 android {
     namespace "com.hisnalmuslim.app"
     compileSdkVersion 34
@@ -17,33 +35,25 @@ android {
         jvmTarget = '1.8'
     }
 
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
     defaultConfig {
         applicationId "com.hisnalmuslim.app"
         minSdkVersion 21
         targetSdkVersion 34
-        versionCode 2
-        versionName "1.1.0"
-        
-        // Optimize for release
-        multiDexEnabled true
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
     }
 
     buildTypes {
         release {
-            // Using debug signing for now, 
-            // In a real scenario, you'd provide a production keystore here.
             signingConfig signingConfigs.debug
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
 
 flutter {
     source '../..'
-}
-
-dependencies {
-    implementation 'com.android.support:multidex:1.0.3'
 }
