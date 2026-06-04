@@ -70,9 +70,10 @@ class _TazakkarAppState extends State<TazakkarApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       builder: (context, child) {
-        final media = MediaQuery.of(context);
         return MediaQuery(
-          data: media.copyWith(textScaleFactor: _fontScale),
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(_fontScale),
+          ),
           child: Directionality(
             textDirection: TextDirection.rtl,
             child: child!,
